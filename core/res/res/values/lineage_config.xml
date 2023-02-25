@@ -35,7 +35,4 @@
     <!-- Whether to spoof device as pixel for certain google apps, to
          unlock pixel-exclusive features -->
     <bool name="config_spoofGoogleApps">false</bool>
-
-    <!-- Whether usage of the proximity sensor during doze is supported -->
-    <bool name="doze_proximity_sensor_supported">true</bool>
 </resources>

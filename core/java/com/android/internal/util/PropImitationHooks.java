@@ -110,7 +110,8 @@ public class PropImitationHooks {
          * Set Pixel XL for Google Photos
          * Set custom model for Netflix
          */
-        if (!sCertifiedFp.isEmpty() && sIsGms) {
+        if (sCertifiedProps.length == 4 && sIsGms) {
+//        if (!sCertifiedProps.isEmpty() && sIsGms) {
             dlog("Spoofing build for GMS");
             setPropValue("DEVICE", sCertifiedProps[0]);
             setPropValue("PRODUCT", sCertifiedProps[1]);
