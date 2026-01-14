@@ -58,6 +58,7 @@ constructor(
     private val onLeftDefault: Boolean = context.resources.getBoolean(
         R.bool.config_audioPanelOnLeftSide)
     private var volumePanelOnLeft: Boolean = false
+    private var volumePanelOnLeftLand: Boolean = false
 
     private val volumePanelOnLeftObserver =
     object : ContentObserver(Handler(Looper.getMainLooper())) {
@@ -69,8 +70,16 @@ constructor(
                     if (onLeftDefault) 1 else 0,
                     UserHandle.USER_CURRENT
                 ) != 0
-            if (volumePanelOnLeft != onLeft) {
+            val onLeftLand =
+                Settings.System.getIntForUser(
+                    context.contentResolver,
+                    Settings.System.VOLUME_PANEL_ON_LEFT_LAND,
+                    if (onLeftDefault) 1 else 0,
+                    UserHandle.USER_CURRENT
+                ) != 0
+            if (volumePanelOnLeft != onLeft || volumePanelOnLeftLand != onLeftLand) {
                 volumePanelOnLeft = onLeft
+                volumePanelOnLeftLand = onLeftLand
                 applyLayoutAndGravity()
             }
         }
@@ -78,19 +87,24 @@ constructor(
 
     private fun applyLayoutAndGravity() {
         val win = window ?: return
+        val dialogView = win.decorView
+        val isLeft = isLandscape() && volumePanelOnLeftLand ||
+            !isLandscape() && volumePanelOnLeft
+
+        dialogView.layoutDirection = if (isLeft) View.LAYOUT_DIRECTION_RTL else View.LAYOUT_DIRECTION_LTR
 
         if (isVolumeDialogVertical) {
             win.setLayout(
                 ViewGroup.LayoutParams.WRAP_CONTENT,
                 ViewGroup.LayoutParams.MATCH_PARENT,
             )
-            win.setGravity(if (volumePanelOnLeft) Gravity.START else Gravity.END)
+            win.setGravity(if (isLeft) Gravity.LEFT else Gravity.RIGHT)
         } else {
             win.setLayout(
                 ViewGroup.LayoutParams.MATCH_PARENT,
                 ViewGroup.LayoutParams.WRAP_CONTENT,
             )
-            val side = if (volumePanelOnLeft) Gravity.START else Gravity.END
+            val side = if (isLeft) Gravity.LEFT else Gravity.RIGHT
             win.setGravity(Gravity.TOP or side)
         }
     }
@@ -145,10 +159,22 @@ constructor(
             volumePanelOnLeftObserver,
             UserHandle.USER_ALL
         )
+        context.contentResolver.registerContentObserver(
+            Settings.System.getUriFor(Settings.System.VOLUME_PANEL_ON_LEFT_LAND),
+            false,
+            volumePanelOnLeftObserver,
+            UserHandle.USER_ALL
+        )
         configurationController.addCallback(this)
         volumePanelOnLeft = Settings.System.getIntForUser(
             context.contentResolver,
             Settings.System.VOLUME_PANEL_ON_LEFT,
+            if (onLeftDefault) 1 else 0,
+            UserHandle.USER_CURRENT
+        ) != 0
+        volumePanelOnLeftLand = Settings.System.getIntForUser(
+            context.contentResolver,
+            Settings.System.VOLUME_PANEL_ON_LEFT_LAND,
             if (onLeftDefault) 1 else 0,
             UserHandle.USER_CURRENT
         ) != 0
@@ -178,5 +204,10 @@ constructor(
             }
         }
         return false
+    }
+
+    private fun isLandscape(): Boolean {
+        return context.resources.configuration.orientation ==
+            android.content.res.Configuration.ORIENTATION_LANDSCAPE
     }
 }

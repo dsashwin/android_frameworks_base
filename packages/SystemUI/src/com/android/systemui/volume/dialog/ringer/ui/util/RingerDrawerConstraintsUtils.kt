@@ -60,6 +60,13 @@ private fun ConstraintSet.setButtonPositionPortraitConstraints(
         )
     }
     connect(button.id, ConstraintSet.END, motionLayout.id, ConstraintSet.END)
+    setMargin(
+        button.id,
+        ConstraintSet.END,
+        motionLayout.context.resources.getDimensionPixelSize(
+            R.dimen.volume_dialog_background_margin
+        ),
+    )
 }
 
 private fun ConstraintSet.setButtonPositionLandscapeConstraints(
@@ -69,6 +76,13 @@ private fun ConstraintSet.setButtonPositionLandscapeConstraints(
 ) {
     if (motionLayout.getChildAt(index + 1) == null) {
         connect(button.id, ConstraintSet.END, motionLayout.id, ConstraintSet.END)
+        setMargin(
+            button.id,
+            ConstraintSet.END,
+            motionLayout.context.resources.getDimensionPixelSize(
+                R.dimen.volume_dialog_background_margin
+            ),
+        )
     } else {
         connect(
             button.id,
@@ -133,7 +147,8 @@ private fun ConstraintSet.adjustOpenConstraintsForDrawer(
                 },
             )
             connect(view.id, ConstraintSet.BOTTOM, motionLayout.id, ConstraintSet.BOTTOM)
-            connect(
+            connect(view.id, ConstraintSet.END, motionLayout.id, ConstraintSet.END)
+            setMargin(
                 view.id,
                 ConstraintSet.START,
                 motionLayout.getChildAt(1).id,
@@ -173,6 +188,13 @@ private fun ConstraintSet.adjustClosedConstraintsForDrawer(
                             view.id,
                             motionLayout.context.resources.getDimensionPixelSize(
                                 R.dimen.volume_dialog_ringer_drawer_button_size
+                            ),
+                        )
+                        setMargin(
+                            view.id,
+                            ConstraintSet.END,
+                            motionLayout.context.resources.getDimensionPixelSize(
+                                R.dimen.volume_dialog_background_margin
                             ),
                         )
                     }
@@ -220,7 +242,8 @@ private fun ConstraintSet.adjustClosedConstraintsForDrawer(
                 motionLayout.context.resources.getDimensionPixelSize(R.dimen.volume_dialog_width),
             )
             connect(view.id, ConstraintSet.BOTTOM, motionLayout.id, ConstraintSet.BOTTOM)
-            connect(
+            connect(view.id, ConstraintSet.END, motionLayout.id, ConstraintSet.END)
+            setMargin(
                 view.id,
                 ConstraintSet.START,
                 motionLayout.getChildAt(motionLayout.childCount - selectedIndex - 1).id,
