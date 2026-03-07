@@ -22,7 +22,11 @@ import static android.view.WindowManagerPolicyConstants.NAV_BAR_MODE_3BUTTON;
 import android.annotation.Nullable;
 import android.content.Context;
 import android.content.res.Configuration;
+import android.database.ContentObserver;
 import android.graphics.drawable.Icon;
+import android.os.Handler;
+import android.os.Looper;
+import android.provider.Settings;
 import android.util.AttributeSet;
 import android.util.Log;
 import android.util.SparseArray;
@@ -116,6 +120,17 @@ public class NavigationBarInflaterView extends FrameLayout {
 
     private boolean mIsVertical;
     private boolean mAlternativeOrder;
+    private boolean mNavbarKeyOrderReversed;
+
+    private final ContentObserver mNavbarKeyOrderObserver = new ContentObserver(
+            new Handler(Looper.getMainLooper())) {
+        @Override
+        public void onChange(boolean selfChange) {
+            mNavbarKeyOrderReversed = Settings.Secure.getInt(mContext.getContentResolver(),
+                    Settings.Secure.NAVIGATIONBAR_KEY_ORDER, 0) == 1;
+            onLikelyDefaultLayoutChange();
+        }
+    };
 
     private LauncherProxyService mLauncherProxyService;
     private int mNavBarMode = NAV_BAR_MODE_3BUTTON;
@@ -126,6 +141,11 @@ public class NavigationBarInflaterView extends FrameLayout {
         mLauncherProxyService = Dependency.get(LauncherProxyService.class);
         mListener = new Listener(this);
         mNavBarMode = Dependency.get(NavigationModeController.class).addListener(mListener);
+        mNavbarKeyOrderReversed = Settings.Secure.getInt(mContext.getContentResolver(),
+                Settings.Secure.NAVIGATIONBAR_KEY_ORDER, 0) == 1;
+        mContext.getContentResolver().registerContentObserver(
+                Settings.Secure.getUriFor(Settings.Secure.NAVIGATIONBAR_KEY_ORDER),
+                false, mNavbarKeyOrderObserver);
     }
 
     @VisibleForTesting
@@ -162,7 +182,15 @@ public class NavigationBarInflaterView extends FrameLayout {
                 : mLauncherProxyService.shouldShowSwipeUpUI()
                         ? R.string.config_navBarLayoutQuickstep
                         : R.string.config_navBarLayout;
-        return getContext().getString(defaultResource);
+        String layout = getContext().getString(defaultResource);
+        if (mNavbarKeyOrderReversed) {
+            String[] sections = layout.split(GRAVITY_SEPARATOR, 3);
+            if (sections.length == 3) {
+                layout = sections[2] + GRAVITY_SEPARATOR + sections[1]
+                        + GRAVITY_SEPARATOR + sections[0];
+            }
+        }
+        return layout;
     }
 
     private void onNavigationModeChanged(int mode) {
@@ -172,6 +200,7 @@ public class NavigationBarInflaterView extends FrameLayout {
     @Override
     protected void onDetachedFromWindow() {
         Dependency.get(NavigationModeController.class).removeListener(mListener);
+        mContext.getContentResolver().unregisterContentObserver(mNavbarKeyOrderObserver);
         super.onDetachedFromWindow();
     }
 
